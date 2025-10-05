@@ -5,3 +5,6 @@ __pycache__/
 # Environment folders
 .venv
 venv/
+
+# test cluttered_folder
+cluttered_folder/
