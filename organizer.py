@@ -12,20 +12,20 @@ DAYS_TO_ARCHIVE = 30
 # Dictionary mapping file extensions to folder names.
 FILE_CATEGORIES = {
     # Images
-    '.jpg': 'Images', '.jpeg': 'Images', '.png': 'Images', '.gif': 'Images',
+    'images': ['.jpg', '.jpeg', '.png', '.gif'],
     # Documents
-    '.pdf': 'Documents', '.docx': 'Documents', '.txt': 'Documents',
+    'Documents': ['.pdf', '.docx', '.txt'],
     # Archives
-    '.zip': 'Archives', '.rar': 'Archives', '.7z': 'Archives',
+    'Archives': ['.zip', '.rar', '.7z'],
     # Code
-    '.py': 'Code', '.js': 'Code', '.html': 'Code',
+    'Code': ['.py', '.js', '.html'],
 }
 
 # --- SETUP AND DIRECTORY CREATION ---
 
 def setup_directories(target_directory):
   # Create all necessary destination folders
-  all_folders = list(set(FILE_CATEGORIES.values())) + ['Miscellaneous', 'Old_Files']
+  all_folders = list(FILE_CATEGORIES.keys()) + ['Miscellaneous', 'Old_Files']
   for folder in all_folders:
     os.makedirs(os.path.join(target_directory, folder), exist_ok=True)
 
@@ -52,13 +52,16 @@ def file_organization(target_directory):
         print(f"Archived: {filename} -> Old_Files/")
         continue # Skip to the next file
     except Exception as e:
-        print(f"Could not check age for {filename}. Error: {e}")
+      print(f"Could not check age for {filename}. Error: {e}")
     
     # --- 2. If not old, sort by file type ---
     extension = os.path.splitext(filename)[1].lower()
-    dest_folder = FILE_CATEGORIES.get(extension, 'Miscellaneous')
+    dest_folder = 'Miscellaneous'
+    for folder, ext_list in FILE_CATEGORIES.items():
+      if extension in ext_list:
+        dest_folder = folder
+        break
     destination_path = os.path.join(target_directory, dest_folder, filename)
-    
     shutil.move(source_path, destination_path)
     print(f"Moved: {filename} -> {dest_folder}/")
 
