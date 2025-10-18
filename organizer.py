@@ -22,39 +22,38 @@ FILE_CATEGORIES = {
 }
 
 # --- SETUP AND DIRECTORY CREATION ---
-print("--- Automated Portfolio Organizer ---")
 
-# Create all necessary destination folders
-all_folders = list(set(FILE_CATEGORIES.values())) + ['Miscellaneous', 'Old_Files']
-for folder in all_folders:
+def setup_directories(target_directory):
+  # Create all necessary destination folders
+  all_folders = list(set(FILE_CATEGORIES.values())) + ['Miscellaneous', 'Old_Files']
+  for folder in all_folders:
     os.makedirs(os.path.join(target_directory, folder), exist_ok=True)
-print("Directory setup complete.")
 
 # --- MAIN ORGANIZATION LOGIC ---
-print("\nStarting file organization...")
-now = datetime.now()
-archive_threshold = now - timedelta(days=DAYS_TO_ARCHIVE)
-archive_folder_path = os.path.join(target_directory, 'Old_Files')
-
-for filename in os.listdir(target_directory):
+def file_organization(target_directory):
+  now = datetime.now()
+  archive_threshold = now - timedelta(days=DAYS_TO_ARCHIVE)
+  archive_folder_path = os.path.join(target_directory, 'Old_Files')
+  
+  for filename in os.listdir(target_directory):
     source_path = os.path.join(target_directory, filename)
-
+    
     # Skip directories, process only files
     if not os.path.isfile(source_path):
-        continue
-
+      continue
+    
     # --- 1. Check for old files first ---
     try:
-        file_mod_time_stamp = os.path.getmtime(source_path)
-        file_mod_time = datetime.fromtimestamp(file_mod_time_stamp)
-
-        if file_mod_time < archive_threshold:
-            shutil.move(source_path, os.path.join(archive_folder_path, filename))
-            print(f"Archived: {filename} -> Old_Files/")
-            continue # Skip to the next file
+      file_mod_time_stamp = os.path.getmtime(source_path)
+      file_mod_time = datetime.fromtimestamp(file_mod_time_stamp)
+      
+      if file_mod_time < archive_threshold:
+        shutil.move(source_path, os.path.join(archive_folder_path, filename))
+        print(f"Archived: {filename} -> Old_Files/")
+        continue # Skip to the next file
     except Exception as e:
         print(f"Could not check age for {filename}. Error: {e}")
-
+    
     # --- 2. If not old, sort by file type ---
     extension = os.path.splitext(filename)[1].lower()
     dest_folder = FILE_CATEGORIES.get(extension, 'Miscellaneous')
@@ -63,4 +62,13 @@ for filename in os.listdir(target_directory):
     shutil.move(source_path, destination_path)
     print(f"Moved: {filename} -> {dest_folder}/")
 
-print("\n--- Organization complete! ---")
+def main():
+  print("--- Automated Portfolio Organizer ---")
+  setup_directories(target_directory)
+  print("Directory setup complete.")
+  print("\nStarting file organization...")
+  file_organization(target_directory)
+  print("\n--- Organization complete! ---")
+
+if __name__ == "__main__":
+  main()
