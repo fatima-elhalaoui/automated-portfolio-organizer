@@ -1,3 +1,4 @@
+import logging
 import mimetypes
 from pathlib import Path
 import shutil
@@ -33,7 +34,7 @@ def setup_directories(target_directory: Path):
     (target_directory / folder).mkdir(parents=True, exist_ok=True)
 
 # --- MAIN ORGANIZATION LOGIC ---
-def file_organization(target_directory: Path):
+def file_organization(target_directory: Path, logger):
   now = datetime.now()
   archive_threshold = now - timedelta(days=DAYS_TO_ARCHIVE)
   archive_folder_path = target_directory / 'Old_Files'
@@ -51,10 +52,10 @@ def file_organization(target_directory: Path):
       
       if file_mod_time < archive_threshold:
         shutil.move(str(source_path), archive_folder_path / filename)
-        print(f'Archived: {filename} -> Old_Files/')
+        logger.info(f'Archived: {filename} -> Old_Files/')
         continue
     except Exception as e:
-      print(f'Could not check age for {filename}. Error: {e}')
+      logger.error(f'Could not check age for {filename}. Error: {e}')
     
     # --- 2. If not old, sort by file type ---
     extension = source_path.suffix.lower()
@@ -75,15 +76,33 @@ def file_organization(target_directory: Path):
             break
     destination_path = target_directory / dest_folder / filename
     shutil.move(str(source_path), str(destination_path))
-    print(f'Moved: {filename} -> {dest_folder}/')
+    logger.info(f'Moved: {filename} -> {dest_folder}/')
 
 def main():
-  print('--- Automated Portfolio Organizer ---')
+  # 1. Create a logger object
+  logger = logging.getLogger(__name__)
+  logger.setLevel(logging.INFO)
+  
+  # 2. Create a formatter to define the message format
+  formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+  
+  # 3. Create a handler to write logs to a file
+  file_handler = logging.FileHandler('organizer.log')
+  file_handler.setFormatter(formatter)
+  
+  # 4. Create a handler to show logs on the console
+  console_handler = logging.StreamHandler()
+  console_handler.setFormatter(formatter)
+  
+  # 5. Add both handlers to the logger
+  logger.addHandler(file_handler)
+  logger.addHandler(console_handler)
+  logger.info('--- Automated Portfolio Organizer ---')
   setup_directories(target_directory)
-  print('Directory setup complete.')
-  print('\nStarting file organization...')
-  file_organization(target_directory)
-  print('\n--- Organization complete! ---')
+  logger.info('Directory setup complete.')
+  logger.info('Starting file organization.')
+  file_organization(target_directory, logger)
+  logger.info('--- Organization complete! ---')
 
 if __name__ == '__main__':
   main()
