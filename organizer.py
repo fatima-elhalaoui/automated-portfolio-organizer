@@ -1,3 +1,4 @@
+import mimetypes
 from pathlib import Path
 import shutil
 from datetime import datetime, timedelta
@@ -6,40 +7,42 @@ from datetime import datetime, timedelta
 # The folder to be organized.
 target_directory = Path('cluttered_folder')
 
-# Number of days after which a file is considered "old" and should be archived.
+# Number of days after which a file is considered 'old' and should be archived.
 DAYS_TO_ARCHIVE = 30 
 
-# Dictionary mapping file extensions to folder names.
-FILE_CATEGORIES = {
-    # Images
-    'images': ['.jpg', '.jpeg', '.png', '.gif'],
-    # Documents
-    'Documents': ['.pdf', '.docx', '.txt'],
-    # Archives
-    'Archives': ['.zip', '.rar', '.7z'],
-    # Code
-    'Code': ['.py', '.js', '.html'],
+# Dictionary mapping folders to mimetypes.
+# DICTIONARY 1: High-priority, specific extensions
+EXTENSION_CATEGORIES = {
+  'Code': ['.py', '.js', '.html', '.css'],
+  'Archives': ['.zip', '.rar', '.7z', '.tar', '.gz'],
+  'Documents': ['.pdf', '.docx', 'doc', '.txt', '.odt', '.rtf', '.xls', '.xlsx', '.ppt', '.pptx']
+}
+
+# DICTIONARY 2: Low-priority, general MIME types (our fallback)
+MIME_CATEGORIES = {
+  'Images': 'image',
+  'Video': 'video',
+  'Audio': 'audio',
 }
 
 # --- SETUP AND DIRECTORY CREATION ---
-
-def setup_directories(target_directory):
+def setup_directories(target_directory: Path):
   # Create all necessary destination folders
-  all_folders = list(FILE_CATEGORIES.keys()) + ['Miscellaneous', 'Old_Files']
+  all_folders = list(EXTENSION_CATEGORIES.keys()) + list(MIME_CATEGORIES.keys()) + ['Miscellaneous', 'Old_Files']
   for folder in all_folders:
-    (target_directory/folder).mkdir(parents=True, exist_ok=True)
+    (target_directory / folder).mkdir(parents=True, exist_ok=True)
 
 # --- MAIN ORGANIZATION LOGIC ---
-def file_organization(target_directory):
+def file_organization(target_directory: Path):
   now = datetime.now()
   archive_threshold = now - timedelta(days=DAYS_TO_ARCHIVE)
-  archive_folder_path = target_directory/'Old_Files'
+  archive_folder_path = target_directory / 'Old_Files'
   
   for source_path in target_directory.iterdir():
-    filename  = source_path.name
-    # Skip directories, process only files
-    if source_path.is_dir():
+    if not source_path.is_file():
       continue
+      
+    filename = source_path.name
     
     # --- 1. Check for old files first ---
     try:
@@ -47,30 +50,40 @@ def file_organization(target_directory):
       file_mod_time = datetime.fromtimestamp(file_mod_time_stamp)
       
       if file_mod_time < archive_threshold:
-        shutil.move(source_path, archive_folder_path/filename)
-        print(f"Archived: {filename} -> Old_Files/")
-        continue # Skip to the next file
+        shutil.move(str(source_path), archive_folder_path / filename)
+        print(f'Archived: {filename} -> Old_Files/')
+        continue
     except Exception as e:
-      print(f"Could not check age for {filename}. Error: {e}")
+      print(f'Could not check age for {filename}. Error: {e}')
     
     # --- 2. If not old, sort by file type ---
     extension = source_path.suffix.lower()
     dest_folder = 'Miscellaneous'
-    for folder, ext_list in FILE_CATEGORIES.items():
-      if extension in ext_list:
+    found_in_phase_one = False
+    for folder, extensions in EXTENSION_CATEGORIES.items():
+      if extension in extensions:
         dest_folder = folder
+        found_in_phase_one = True
         break
-    destination_path = target_directory/dest_folder/filename
-    shutil.move(source_path, destination_path)
-    print(f"Moved: {filename} -> {dest_folder}/")
+    if not found_in_phase_one:
+      mime_type, _ = mimetypes.guess_type(filename)
+      if mime_type is not None:
+        main_type = mime_type.split('/')[0]
+        for folder, targeted_main_type in MIME_CATEGORIES.items():
+          if targeted_main_type == main_type:
+            dest_folder = folder
+            break
+    destination_path = target_directory / dest_folder / filename
+    shutil.move(str(source_path), str(destination_path))
+    print(f'Moved: {filename} -> {dest_folder}/')
 
 def main():
-  print("--- Automated Portfolio Organizer ---")
+  print('--- Automated Portfolio Organizer ---')
   setup_directories(target_directory)
-  print("Directory setup complete.")
-  print("\nStarting file organization...")
+  print('Directory setup complete.')
+  print('\nStarting file organization...')
   file_organization(target_directory)
-  print("\n--- Organization complete! ---")
+  print('\n--- Organization complete! ---')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   main()
