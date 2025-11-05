@@ -1,25 +1,26 @@
 # Automated Portfolio Organizer
 
-A Python script that organizes files in a directory by their type and archives files older than a specified number of days. This is a foundational project I built to practice core Python concepts.
+A command-line utility written in Python to organize a directory's files based on their type and modification date.
 
 ## Features
 
-- Scans a target directory for all files.
-- Moves files into categorized subdirectories (e.g., Images, Documents, Code) based on their extension.
-- Identifies files older than a configurable number of days (default: 30) and moves them to an `Old_Files` archive.
-- Creates all necessary folders automatically if they don't exist.
+- **Flexible:** Organizes any directory specified by the user via a command-line argument.
+- **Intelligent Sorting:** Uses a hybrid approach to categorize files. High-priority file types (Documents, Code, Archives) are sorted by specific extensions for accuracy, while general types (Images, Video, Audio) are sorted by their MIME type for scalability.
+- **Archiving:** Moves files older than a configurable number of days (default: 30) to a separate `Old_Files` directory.
+- **Logging:** All operations are logged to both the console and a persistent `organizer.log` file, providing a timestamped record of every action.
 
-## How to Use
+## Requirements
 
-1.  Ensure you have Python 3 installed.
-2.  Place the `organizer.py` script in a folder.
-3.  Create a subfolder inside that folder named `cluttered_folder`.
-4.  Place the files you want to organize inside `cluttered_folder`.
-5.  Run the script from your terminal: `python organizer.py`
+- Python 3.6+
+- No external libraries are required.
 
-## Concepts Practiced
+## Usage
 
-- **File System Interaction:** `os` and `shutil` modules.
-- **Date & Time Manipulation:** `datetime` module for checking file ages.
-- **Data Structures:** Using dictionaries to map file types to folders.
-- **Conditional Logic & Error Handling.**
+1.  Clone this repository to your local machine.
+2.  Navigate to the project directory in your terminal.
+
+Execute the script, passing the path to the directory you wish to organize as an argument.
+
+**Command:**
+```bash
+python organizer.py <path_to_directory>
